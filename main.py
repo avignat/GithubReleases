@@ -5,11 +5,12 @@ import json
 import requests
 from dotenv import load_dotenv
 
-DATE_FORMAT = '%H:%M, %d/%m/%Y'
-LOCK_FILE = '.repos.json.lock'
+PATH = path.dirname(path.realpath(__file__))
+LOCK_FILE = path.join(PATH, '.repos.json.lock')
+REPOS_FILE = path.join(PATH, 'repos')
 
 class History:
-    filename = LOCK_FILE
+    filename = path.join(PATH, LOCK_FILE)
     history = {}
     def __init__(self):
         if path.exists(self.filename):
@@ -49,8 +50,14 @@ def main():
     with open('repos') as f:
         for l in f.readlines():
             l = l.rstrip()
+            if len(l) == 0:
+                continue
             repo = g.get_repo(l)
-            r = repo.get_latest_release()
+            print(l)
+            try:
+                r = repo.get_latest_release()
+            except:
+                continue
             if h.update(l, r.tag_name):
                 send_notification(l, r.tag_name, r.html_url)
     h.save()
