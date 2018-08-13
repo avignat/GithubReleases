@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+# coding: utf-8
 
 from github import Github
 from os import getenv, path
@@ -47,13 +49,12 @@ def main():
     g = Github(getenv('GH_TOKEN'))
     h = History()
 
-    with open('repos') as f:
+    with open(REPOS_FILE) as f:
         for l in f.readlines():
             l = l.rstrip()
             if len(l) == 0:
                 continue
             repo = g.get_repo(l)
-            print(l)
             try:
                 r = repo.get_latest_release()
             except:
