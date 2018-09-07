@@ -11,9 +11,11 @@ PATH = path.dirname(path.realpath(__file__))
 LOCK_FILE = path.join(PATH, '.repos.json.lock')
 REPOS_FILE = path.join(PATH, 'repos')
 
+
 class History:
     filename = path.join(PATH, LOCK_FILE)
     history = {}
+
     def __init__(self):
         if path.exists(self.filename):
             with open(self.filename) as f:
@@ -31,6 +33,7 @@ class History:
         with open(self.filename, 'w') as f:
             json.dump(self.history, f)
 
+
 def send_notification(repo, tag, url):
     data = {
         'token': getenv('PO_TOKEN'),
@@ -43,6 +46,7 @@ def send_notification(repo, tag, url):
     if r.status_code != 200:
         print(r.text)
         raise Exception('Something wrong')
+
 
 def main():
     load_dotenv()
@@ -62,5 +66,6 @@ def main():
             if h.update(l, r.tag_name):
                 send_notification(l, r.tag_name, r.html_url)
     h.save()
+
 
 main()
