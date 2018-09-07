@@ -141,5 +141,5 @@ pip-selfcheck.json
 repos.json.lock
 
 .env
-.repos.lock.json
+.repos.json.lock
 repos
