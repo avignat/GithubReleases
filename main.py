@@ -3,9 +3,9 @@
 
 from github import Github
 from os import getenv, path
+from dotenv import load_dotenv
 import json
 import requests
-from dotenv import load_dotenv
 
 PATH = path.dirname(path.realpath(__file__))
 LOCK_FILE = path.join(PATH, '.repos.json.lock')
@@ -34,18 +34,45 @@ class History:
             json.dump(self.history, f)
 
 
-def send_notification(repo, tag, url):
+def send_rocket(repo, release):
+    data = {
+        'username': 'GithubRelease',
+        'attachments': [
+            {
+                'title': "New version of {} ({})".format(repo, release.tag_name),
+                'title_link': release.html_url,
+                'text': release.body,
+                'color': '#764FA5'
+            }
+        ]
+    }
+
+    r = requests.post(getenv('ROCKET_HOOK'), json=data)
+    if r.status_code != 200:
+        print(r.text)
+        raise Exception('Something wrong')
+
+
+def send_pushover(repo, release):
     data = {
         'token': getenv('PO_TOKEN'),
         'user': getenv('PO_USER'),
         'device': getenv('PO_DEVICE'),
-        'title': "New version of {} ({})".format(repo, tag),
-        'message': url
+        'title': "New version of {} ({})".format(repo, release.tag_name),
+        'message': release.html_url
     }
-    r = requests.post(' https://api.pushover.net/1/messages.json', json=data)
+
+    r = requests.post('https://api.pushover.net/1/messages.json', json=data)
     if r.status_code != 200:
         print(r.text)
         raise Exception('Something wrong')
+
+
+def send_notifications(repo, release):
+    if getenv('PO_TOKEN') and getenv('PO_USER') and getenv('PO_DEVICE'):
+        send_pushover(repo, release)
+    if getenv('ROCKET_HOOK'):
+        send_rocket(repo, release)
 
 
 def main():
@@ -63,9 +90,11 @@ def main():
                 r = repo.get_latest_release()
             except:
                 continue
+
             if h.update(l, r.tag_name):
-                send_notification(l, r.tag_name, r.html_url)
+                send_notifications(l, r)
     h.save()
 
 
-main()
+if __name__ == '__main__':
+    main()
